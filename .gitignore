@@ -1,0 +1,10 @@
+# BMAD — fichiers de config personnels, non partagés
+**/*.user.toml
+**/*.user.yaml
+
+# OS / éditeurs
+.DS_Store
+*.swp
+
+# Node (au cas où des scripts/outillage n8n sont ajoutés plus tard)
+node_modules/
