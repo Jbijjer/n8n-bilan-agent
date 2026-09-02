@@ -1,6 +1,6 @@
 ---
 title: "Assistant Trajet quotidien"
-status: draft
+status: final
 created: 2026-09-02
 updated: 2026-09-02
 ---
