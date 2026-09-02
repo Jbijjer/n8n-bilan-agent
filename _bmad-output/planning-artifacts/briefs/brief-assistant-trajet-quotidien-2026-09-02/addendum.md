@@ -2,6 +2,22 @@
 
 Détail technique et décisions déjà validées par Sébastien, extraits du document source [`docs/brief-projet-assistant-trajet.md`](../../../../../docs/brief-projet-assistant-trajet.md). Ce contenu ne va pas dans `brief.md` (trop fin pour un brief produit) mais sert d'intrant direct au PRD et à l'architecture — **à ne pas rouvrir**, sauf indication contraire explicite de Sébastien.
 
+## Question ouverte — Choix d'orchestration (à trancher en phase architecture)
+
+**Statut : ouvert.** Le brief d'origine posait n8n comme acquis pour l'orchestration ; cette hypothèse a été remise en question et n'est **pas** à traiter comme une décision figée. Les deux options restent sur la table jusqu'à la phase `bmad-architecture`.
+
+**Option A — n8n** (hypothèse de départ, cf. section Orchestration ci-dessous)
+- Pour : nodes Telegram + AI Agent (mémoire de session intégrée) déjà bien adaptés au besoin ; self-hosted mature ; debug visuel de l'exécution (atout pour un utilisateur TDA) ; sous-workflows réutilisables qui collent au pattern "Call LLM isolé" (contrainte n°1).
+- Contre : la séquence stricte "une question à la fois, ne jamais sauter d'étape, insister une seule fois" repose sur le prompt plutôt que sur une vraie machine à états — fragilité potentielle à travers plusieurs exécutions webhook. JSON de workflow peu diffable/versionnable en git.
+
+**Option B — OpenClaw** ([openclaw/openclaw](https://github.com/openclaw/openclaw)) — assistant IA personnel self-hosted, multi-canaux (dont Telegram), découvert lors de cette remise en question.
+- Pour : vocal Telegram natif qui correspond quasi mot pour mot à la règle du brief (transcription auto via Whisper local en priorité, réponses en bulles vocales Telegram, mode `tts.auto: "inbound"` — ne parle que si le message entrant était vocal) ; accès fichiers via MCP filesystem server (lecture/écriture Obsidian sans plugin tiers) ; modèles hébergés ou locaux interchangeables (contrainte n°1) ; skills/plugins MCP (TypeScript/Python) pour les flux matin/midi/soir.
+- Contre : projet très récent (inconnu de l'agent avant recherche web, malgré ~388k étoiles GitHub — croissance très rapide, donc maturité et historique de sécurité à vérifier indépendamment avant d'y confier du contenu secteur public confidentiel, contrainte n°3) ; surface multi-canaux (WhatsApp/Telegram/Slack/Discord/Signal/iMessage) plus large qu'un workflow n8n isolé ; même limite que n8n sur la séquence stricte (portée par le prompt, pas une vraie FSM) ; boutons Telegram personnalisés (reply keyboard) à vérifier concrètement, pas confirmé en documentation.
+
+**Chemin de décision proposé :** spike cadré — implémenter le flux du soir de bout en bout dans chaque option (quelques heures), comparer sur : fiabilité de la séquence de questions, facilité de lecture/écriture de la fiche Obsidian, qualité réelle du vocal in/out, effort de maintenance perçu. À faire en phase `bmad-architecture`, pas avant — le PRD peut avancer sans que ce choix soit tranché, tant qu'aucune exigence fonctionnelle du PRD ne présuppose l'un ou l'autre.
+
+Sources consultées : [openclaw/openclaw (GitHub)](https://github.com/openclaw/openclaw) · [OpenClaw docs — Plugin SDK](https://docs.openclaw.ai/plugins/sdk-overview) · [OpenClaw docs — Tools/Skills](https://docs.openclaw.ai/tools) · [Stack Junkie — OpenClaw Voice Mode](https://www.stack-junkie.com/blog/openclaw-voice-mode-telegram) · [LumaDock — Add voice to OpenClaw](https://lumadock.com/tutorials/openclaw-voice-tts-stt-talk-mode)
+
 ## Contraintes non négociables
 
 1. **Indépendance de modèle LLM** — appel LLM isolé/interchangeable, aucune logique de prompt ne dépend d'un modèle particulier.
@@ -30,6 +46,7 @@ Détail technique et décisions déjà validées par Sébastien, extraits du doc
 - **Long terme / patterns** : recherche ciblée dans l'historique Obsidian (pas d'injection massive), déclenchée uniquement à la demande explicite. Si un pattern net est détecté dans "Autres", l'agent propose un champ structuré dédié — sans réécrire les entrées passées.
 
 ### Orchestration
+*(Hypothèse de départ décrite ci-dessous — outil non tranché, voir "Question ouverte — Choix d'orchestration" en tête de document.)*
 - Workflow "routeur" (réception Telegram, transcription si vocal, routage) + sous-workflows par flux (matin / midi / soir / analyse patterns).
 - Sous-workflows communs réutilisables : lecture fiche, appel LLM, TTS, écriture Obsidian.
 - Appel LLM isolé dans un sous-workflow dédié ("Call LLM"), point d'entrée unique — swap de modèle = changer un seul node.
