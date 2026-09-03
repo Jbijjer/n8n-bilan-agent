@@ -124,7 +124,7 @@ Sébastien peut faire, dans l'ordre et une question à la fois, le point sur : s
 - Tout contenu hors des 6 points structurés est capturé dans le champ "Autres", non reformaté.
 - Le contenu confirmé est écrit dans la fiche du jour (tous les champs structurés + "Autres").
 
-**Notes :** `[ASSUMPTION]` La règle "reformuler une seule fois" s'applique par point du bilan (jusqu'à 6 reformulations possibles dans le flux), pas une seule fois pour l'ensemble du flux — à confirmer.
+**Notes :** La règle "reformuler une seule fois" s'applique par point du bilan (jusqu'à 6 reformulations possibles dans le flux) — confirmé par Sébastien.
 
 ### 4.5 Continuité et mémoire
 
