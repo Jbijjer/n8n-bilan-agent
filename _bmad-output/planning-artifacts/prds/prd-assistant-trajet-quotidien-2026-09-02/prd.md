@@ -10,7 +10,7 @@ updated: 2026-09-02
 
 ## 0. Document Purpose
 
-Ce PRD s'adresse à Sébastien (porteur de projet et seul utilisateur) et sert d'intrant direct à la phase architecture (`bmad-architecture`). Il définit *ce que* le système doit faire, pas *comment* — les choix techniques déjà tranchés (STT/TTS, LLM, stockage) et le choix d'orchestration encore ouvert (n8n vs OpenClaw) vivent dans l'addendum du brief produit ([`../../briefs/brief-assistant-trajet-quotidien-2026-09-02/addendum.md`](../../briefs/brief-assistant-trajet-quotidien-2026-09-02/addendum.md)), référencé mais non dupliqué ici. Vocabulaire ancré au Glossaire (§3) ; fonctionnalités groupées avec exigences fonctionnelles (FR) numérotées globalement ; hypothèses inférées marquées `[ASSUMPTION]` et indexées en §9.
+Ce PRD s'adresse à Sébastien (porteur de projet et seul utilisateur) et sert d'intrant direct à la phase architecture (`bmad-architecture`). Il définit *ce que* le système doit faire, pas *comment* — les choix techniques déjà tranchés (STT/TTS, LLM, stockage) et le choix d'orchestration encore ouvert (n8n vs OpenClaw) vivent dans l'addendum du brief produit ([`../../briefs/brief-assistant-trajet-quotidien-2026-09-02/addendum.md`](../../briefs/brief-assistant-trajet-quotidien-2026-09-02/addendum.md)), référencé mais non dupliqué ici. Vocabulaire ancré au Glossaire (§3) ; fonctionnalités groupées avec exigences fonctionnelles (FR) numérotées globalement ; hypothèses inférées marquées `[ASSUMPTION]` et indexées en §10.
 
 ## 1. Vision
 
@@ -183,7 +183,7 @@ Quand un thème récurrent net est détecté, le système propose un champ struc
 - Le schéma de la fiche du jour ne change qu'après validation humaine explicite de Sébastien.
 - Aucune fiche existante n'est modifiée rétroactivement par cette fonction.
 
-**Out of Scope :** Le mécanisme exact d'ajout du champ au schéma (manuel ou semi-automatisé) est un point ouvert — voir §8.
+**Out of Scope :** Le mécanisme exact d'ajout du champ au schéma (manuel ou semi-automatisé) est un point ouvert — voir §9.
 
 ### 4.7 Gestion des erreurs
 
@@ -225,7 +225,16 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 **Consequences (testable) :**
 - Remplacer le modèle ou le fournisseur LLM ne nécessite de modifier qu'un seul point du système, jamais la logique ou les prompts propres à chaque flux.
 
-## 5. Non-Goals (Explicit)
+## 5. Constraints and Guardrails
+
+*Frontières contraignantes pour toute conception downstream — indépendantes du choix d'orchestration (§9, Open Question #1).*
+
+- **Self-hosting.** Le système doit fonctionner sans dépendance à un service cloud tiers pour les données sensibles en production (orchestration, stockage, et à terme LLM et vocal). Exception assumée et temporaire : phase de test, où un LLM API externe (Claude/GPT-4o) sert délibérément à juger la qualité du système avant la bascule en production. Valide SM-4.
+- **Confidentialité.** Le contenu des bilans (potentiellement des détails de travail secteur public) ne transite jamais par un service hors de l'infrastructure de Sébastien une fois en production. Valide SM-4.
+- **Pas d'automatisation silencieuse.** Aucune modification de la structure de données (nouveau champ, réécriture d'une entrée passée) sans validation humaine explicite — voir FR-12.
+- **Sécurité des accès.** Identifiants et secrets ne sont jamais exposés en clair ni versionnés dans le dépôt de code, quel que soit l'outil retenu. Mécanisme précis laissé à l'architecture.
+
+## 6. Non-Goals (Explicit)
 
 - Pas de rappels proactifs spontanés (le système ne parle jamais sans que Sébastien ait initié un flux).
 - Pas d'intégration avec un outil de scrum d'équipe (Jira ou autre).
@@ -233,7 +242,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 - Pas d'ambition d'innovation algorithmique ou de moat technique — la valeur est dans l'ajustement à l'usage réel, pas dans la nouveauté.
 - Pas de correction ou de jugement sur le contenu des bilans (tâches non faites, procrastination, imprévus) — le système capture, il ne critique pas.
 
-## 6. MVP Scope
+## 7. MVP Scope
 
 ### 6.1 In Scope
 
@@ -246,11 +255,11 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 
 ### 6.2 Out of Scope for MVP
 
-- Rappels proactifs, intégration Jira, déclenchement automatique — différés, non priorisés (cf. §5).
+- Rappels proactifs, intégration Jira, déclenchement automatique — différés, non priorisés (cf. §6).
 - Bascule complète vers infrastructure 100% locale (LLM + vocal self-hosted sans API) — prévue mais postérieure au MVP, cf. brief §Vision.
 - Choix final de l'outil d'orchestration (n8n vs OpenClaw) — **hors scope du présent PRD**, tranché en phase architecture (voir addendum du brief).
 
-## 7. Success Metrics
+## 8. Success Metrics
 
 *Reprises et précisées à partir des critères de succès confirmés au brief produit.*
 
@@ -267,7 +276,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 **Gate (binaire, à valider avant bascule production)**
 - **SM-4** : Aucun contenu de bilan ne transite hors de l'infrastructure de Sébastien une fois en production (exception assumée : phase de test sur LLM API). Vérifié par revue technique avant bascule, pas mesuré en continu.
 
-## 8. Open Questions
+## 9. Open Questions
 
 1. **Outil d'orchestration** (n8n vs OpenClaw) — non tranché, cf. addendum du brief produit. À trancher via spike en phase `bmad-architecture`.
 2. Mécanique exacte de la recherche ciblée dans l'historique pour FR-11 (grep par plage de dates vs requêtes à un plugin/API Obsidian) — architecture.
@@ -275,6 +284,6 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 4. Mécanisme concret d'ajout du nouveau champ structuré une fois validé (FR-12) — modification manuelle du schéma ou semi-automatisée — architecture.
 5. Schéma YAML exact de la fiche du jour (FR-7) — noms de champs, types, convention de nommage des fichiers — architecture.
 
-## 9. Assumptions Index
+## 10. Assumptions Index
 
 *Toutes les hypothèses inférées ont été confirmées avec Sébastien (voir `.memlog.md`) — aucune ouverte à ce stade.*
