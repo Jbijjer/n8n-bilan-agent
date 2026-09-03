@@ -40,6 +40,7 @@ Chaque journée devient une fiche structurée et consultable dans un vault Obsid
 
 ## 3. Glossaire
 
+- **Bilan** — Terme générique désignant l'activité de planification ou de compte-rendu propre à un flux (ex. "bilan matin", "bilan soir"). Un bilan se déroule *pendant* un flux et son contenu confirmé est ce qui est écrit dans la fiche du jour — le bilan est l'activité, la fiche du jour en est la trace persistante.
 - **Fiche du jour** — Fichier markdown unique par journée dans le vault Obsidian (ex. `2026-08-14.md`), frontmatter YAML structuré + champ libre "Autres". Une fiche par date, jamais réécrite rétroactivement par l'agent sans validation humaine.
 - **Flux** — Un des trois rendez-vous quotidiens (Flux Matin, Flux Midi, Flux Soir), déclenché manuellement.
 - **Trajet** — Fenêtre de temps réelle (voiture) pendant laquelle un flux se déroule ; contrainte de forme (échanges courts, vocal adapté) mais pas d'objet du système.
@@ -62,7 +63,7 @@ Chaque journée devient une fiche structurée et consultable dans un vault Obsid
 Le bot ne répond qu'aux messages provenant du `chat_id` de Sébastien.
 
 **Consequences (testable) :**
-- Tout message d'un `chat_id` différent est ignoré silencieusement ou rejeté, jamais traité par un flux.
+- Tout message d'un `chat_id` différent est ignoré silencieusement (aucune réponse, aucun indice de l'existence du bot), jamais traité par un flux.
 
 #### FR-2 : Déclenchement manuel par bouton
 
@@ -175,6 +176,8 @@ L'analyse s'appuie sur une sélection pertinente de fiches passées, jamais sur 
 **Consequences (testable) :**
 - Le système répond en restant factuel : en l'absence de thème réellement récurrent (pas 1-2 mentions isolées), il l'indique explicitement plutôt que d'extrapoler.
 
+`[NOTE FOR PM]` La mécanique exacte de sélection ("pertinente") n'est pas encore définie — voir Open Question #2.
+
 #### FR-12 : Proposition de nouveau champ, jamais application automatique
 
 Quand un thème récurrent net est détecté, le système propose un champ structuré dédié ; il n'applique jamais ce changement seul et ne réécrit jamais les entrées passées.
@@ -184,6 +187,8 @@ Quand un thème récurrent net est détecté, le système propose un champ struc
 - Aucune fiche existante n'est modifiée rétroactivement par cette fonction.
 
 **Out of Scope :** Le mécanisme exact d'ajout du champ au schéma (manuel ou semi-automatisé) est un point ouvert — voir §9.
+
+`[NOTE FOR PM]` Voir Open Question #4 pour le mécanisme précis d'ajout de champ.
 
 ### 4.7 Gestion des erreurs
 
@@ -244,7 +249,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 
 ## 7. MVP Scope
 
-### 6.1 In Scope
+### 7.1 In Scope
 
 - Flux matin, midi, soir — déclenchement manuel uniquement.
 - Vocal natif Telegram (in/out) et texte, selon la règle stricte du canal.
@@ -253,7 +258,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 - Point d'appel LLM isolé ; phase de test sur LLM API (Claude/GPT-4o) avant bascule en LLM local self-hosted.
 - Gestion d'erreurs explicite (transcription, ambiguïté, échec technique).
 
-### 6.2 Out of Scope for MVP
+### 7.2 Out of Scope for MVP
 
 - Rappels proactifs, intégration Jira, déclenchement automatique — différés, non priorisés (cf. §6).
 - Bascule complète vers infrastructure 100% locale (LLM + vocal self-hosted sans API) — prévue mais postérieure au MVP, cf. brief §Vision.
