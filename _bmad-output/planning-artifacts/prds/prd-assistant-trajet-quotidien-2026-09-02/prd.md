@@ -1,12 +1,11 @@
 ---
 title: "Assistant Trajet quotidien"
-status: draft
+status: final
 created: 2026-09-02
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # PRD : Assistant Trajet quotidien
-*Working title — confirmer.*
 
 ## 0. Document Purpose
 
@@ -235,9 +234,10 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 *Frontières contraignantes pour toute conception downstream — indépendantes du choix d'orchestration (§9, Open Question #1).*
 
 - **Self-hosting.** Le système doit fonctionner sans dépendance à un service cloud tiers pour les données sensibles en production (orchestration, stockage, et à terme LLM et vocal). Exception assumée et temporaire : phase de test, où un LLM API externe (Claude/GPT-4o) sert délibérément à juger la qualité du système avant la bascule en production. Valide SM-4.
-- **Confidentialité.** Le contenu des bilans (potentiellement des détails de travail secteur public) n'est **stocké et traité** que sur l'infrastructure de Sébastien une fois en production — aucun service tiers ne conserve ni n'analyse ce contenu. **Exception explicitement acceptée :** le transport réseau via Telegram (message et vocal) est un risque résiduel assumé, pas un manquement à cette contrainte — justifié par le chiffrement en transit de Telegram, la restriction au `chat_id` unique de Sébastien (FR-1), et l'absence d'alternative self-hosted pour ce canal. Si ce risque devenait inacceptable, le canal serait à reconsidérer en phase architecture — ce n'est pas le cas aujourd'hui. Valide SM-4.
+- **Confidentialité.** Le contenu des bilans (potentiellement des détails de travail secteur public) n'est **stocké et traité** que sur l'infrastructure de Sébastien une fois en production — aucun service tiers ne conserve ni n'analyse ce contenu. **Exception explicitement acceptée :** le transport réseau via Telegram (message et vocal) est un risque résiduel assumé, justifié par le chiffrement en transit, la restriction au `chat_id` unique (FR-1), et l'absence d'alternative self-hosted pour ce canal — à rouvrir en architecture si ce risque devenait inacceptable. Valide SM-4.
 - **Pas d'automatisation silencieuse.** Aucune modification de la structure de données (nouveau champ, réécriture d'une entrée passée) sans validation humaine explicite — voir FR-12.
 - **Sécurité des accès.** Identifiants et secrets ne sont jamais exposés en clair ni versionnés dans le dépôt de code, quel que soit l'outil retenu. Mécanisme précis laissé à l'architecture.
+- **Temps de réponse (sécurité, pas seulement confort).** Le trajet se fait en conduisant : le temps de réponse de l'agent (STT → LLM → TTS) ne doit jamais donner l'impression d'attendre activement la machine au volant. Critère qualitatif, pas de borne chiffrée dans ce PRD — à valider empiriquement en phase architecture, en particulier après bascule vers un LLM local (latence GPU différente de l'API).
 
 ## 6. Non-Goals (Explicit)
 
