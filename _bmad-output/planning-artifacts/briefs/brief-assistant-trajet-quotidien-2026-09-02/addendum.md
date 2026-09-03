@@ -52,11 +52,17 @@ Sources consultées : [openclaw/openclaw (GitHub)](https://github.com/openclaw/o
 - ~~Workflow "routeur" (réception Telegram, transcription si vocal, routage) + sous-workflows par flux (matin / midi / soir / analyse patterns).~~
 - ~~Sous-workflows communs réutilisables : lecture fiche, appel LLM, TTS, écriture Obsidian.~~
 - ~~Appel LLM isolé dans un sous-workflow dédié ("Call LLM"), point d'entrée unique — swap de modèle = changer un seul node.~~
-- Principe conservé sous une autre forme : appel LLM toujours isolé derrière un point d'entrée unique (interface `LLMClient` dans l'architecture Python) — swap de modèle = changer un adaptateur, pas la logique des flux.
+- Principe conservé sous une autre forme, et simplifié : appel LLM toujours isolé derrière un point d'entrée unique — **LiteLLM** (proxy self-hosted, endpoint unique compatible OpenAI, tourne sur la machine GPU) unifie Ollama local et Claude/GPT-4o API. L'orchestrateur n'a qu'un seul client HTTP, toujours le même code ; swap de modèle = changer la config de routage LiteLLM, pas le code de l'orchestrateur.
+
+### Topologie matérielle (nouveau, précisé en architecture)
+Deux hôtes, pas un seul :
+- **Unraid (Docker)** — le service orchestrateur (Python + LangGraph + Telegram + lecture/écriture Obsidian + TTS Piper). CPU seulement.
+- **Machine GPU (GTX 5060 16GB)** — tout ce qui a besoin du GPU : Ollama + LiteLLM, et le service STT.
+- Communication entre les deux via **Tailscale** (déjà décidé, contrainte non négociable n°5) — même mécanisme que celui prévu pour le webhook.
 
 ### Vocal
-- STT : `faster-whisper` self-hosted (medium/large-v3, français). **Mis à jour en architecture :** utilisé **in-process** (librairie Python native), pas de service HTTP séparé — simplification permise par le paradigme Python, moins de pièces à faire tourner et surveiller.
-- TTS : Piper pour démarrer (bindings Python, in-process également) ; upgrade path vers Coqui XTTS v2 si besoin (~4-6GB VRAM). Interchangeables sans impact sur le reste du système.
+- STT : `faster-whisper` self-hosted (medium/large-v3, français). **Corrigé en architecture :** tourne comme un **service réseau léger sur la machine GPU** (pas in-process sur Unraid comme envisagé un temps pendant l'architecture) — `large-v3` a besoin du GPU pour être rapide, et le GPU n'est pas sur la même machine que l'orchestrateur.
+- TTS : Piper pour démarrer, in-process sur Unraid (CPU, léger, pas besoin du GPU) ; upgrade path vers Coqui XTTS v2 si besoin (~4-6GB VRAM — **si adopté, devra tourner sur la machine GPU**, pas sur Unraid ; licence CPML non-commerciale, sans incidence pour un usage personnel ; fork communautaire maintenu `idiap/coqui-ai-TTS` depuis la fermeture de Coqui AI en janvier 2024). Interchangeables sans impact sur le reste du système.
 
 ### LLM
 - Phase de tests : API (Claude ou GPT-4o).
