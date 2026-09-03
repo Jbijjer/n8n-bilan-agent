@@ -235,7 +235,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 *Frontières contraignantes pour toute conception downstream — indépendantes du choix d'orchestration (§9, Open Question #1).*
 
 - **Self-hosting.** Le système doit fonctionner sans dépendance à un service cloud tiers pour les données sensibles en production (orchestration, stockage, et à terme LLM et vocal). Exception assumée et temporaire : phase de test, où un LLM API externe (Claude/GPT-4o) sert délibérément à juger la qualité du système avant la bascule en production. Valide SM-4.
-- **Confidentialité.** Le contenu des bilans (potentiellement des détails de travail secteur public) ne transite jamais par un service hors de l'infrastructure de Sébastien une fois en production. Valide SM-4.
+- **Confidentialité.** Le contenu des bilans (potentiellement des détails de travail secteur public) n'est **stocké et traité** que sur l'infrastructure de Sébastien une fois en production — aucun service tiers ne conserve ni n'analyse ce contenu. **Exception explicitement acceptée :** le transport réseau via Telegram (message et vocal) est un risque résiduel assumé, pas un manquement à cette contrainte — justifié par le chiffrement en transit de Telegram, la restriction au `chat_id` unique de Sébastien (FR-1), et l'absence d'alternative self-hosted pour ce canal. Si ce risque devenait inacceptable, le canal serait à reconsidérer en phase architecture — ce n'est pas le cas aujourd'hui. Valide SM-4.
 - **Pas d'automatisation silencieuse.** Aucune modification de la structure de données (nouveau champ, réécriture d'une entrée passée) sans validation humaine explicite — voir FR-12.
 - **Sécurité des accès.** Identifiants et secrets ne sont jamais exposés en clair ni versionnés dans le dépôt de code, quel que soit l'outil retenu. Mécanisme précis laissé à l'architecture.
 
@@ -279,7 +279,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 - **SM-C1** : Taux de relance ("insister deux fois") ne doit jamais augmenter dans le temps — un système qui pousse plus fort pour faire monter l'usage (SM-1) casse la contrainte "n'insiste pas une seconde fois" (FR-6). Contrebalance SM-1.
 
 **Gate (binaire, à valider avant bascule production)**
-- **SM-4** : Aucun contenu de bilan ne transite hors de l'infrastructure de Sébastien une fois en production (exception assumée : phase de test sur LLM API). Vérifié par revue technique avant bascule, pas mesuré en continu.
+- **SM-4** : Aucun contenu de bilan n'est stocké ni traité hors de l'infrastructure de Sébastien une fois en production (exceptions explicitement acceptées : phase de test sur LLM API, et transport réseau via Telegram — voir §5 Confidentialité). Vérifié par revue technique avant bascule, pas mesuré en continu.
 
 ## 9. Open Questions
 
