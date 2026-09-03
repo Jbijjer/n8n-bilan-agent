@@ -40,11 +40,11 @@ Sources consultées : [openclaw/openclaw (GitHub)](https://github.com/openclaw/o
 - Un fichier markdown par jour dans un vault Obsidian (ex. `2026-08-14.md`).
 - Frontmatter YAML fixe : date, plan matin, ajustement midi, prévu vs fait, imprévus, suivis pour demain (+ avec qui), feeling général, temps de procrastination estimé.
 - Champ libre "Autres" en corps de texte, non structuré.
-- Accès depuis n8n : système de fichiers direct, ou plugin Local REST API d'Obsidian (recherche full-text intégrée).
+- **Schéma exact et accès :** tranchés en architecture — voir spine, AD-10 (schéma YAML) et AD-3 (`ObsidianStore.read_today()` / `read_range()`), accès direct au système de fichiers (plus de dépendance à n8n ou à son plugin Local REST API).
 
 ### Mémoire et continuité
 - **Intra-journée** (matin → midi → soir) : pas de mémoire de session partagée entre trajets. Chaque flux lit la fiche du jour existante et l'injecte dans le prompt au démarrage.
-- **Intra-trajet** : mémoire de session du node AI Agent n8n, clé = `chat_id` + date.
+- **Intra-trajet** : mémoire de session (checkpointer LangGraph en architecture), clé = `chat_id` + date + type de flux — voir spine, AD-2.
 - **Long terme / patterns** : recherche ciblée dans l'historique Obsidian (pas d'injection massive), déclenchée uniquement à la demande explicite. Si un pattern net est détecté dans "Autres", l'agent propose un champ structuré dédié — sans réécrire les entrées passées.
 
 ### Orchestration
@@ -137,13 +137,13 @@ Reste factuel — ne pas extrapoler au-delà de ce qui est présent dans les don
 ```
 
 ### Gestion des erreurs
-- Transcription vide/incohérente → redemander par vocal plutôt que d'envoyer au LLM.
-- Message hors-sujet/ambigu → le LLM doit demander clarification, ne pas halluciner.
-- Échec technique (node, fichier inaccessible) → `Error Trigger` global n8n, notification Telegram explicite ("Erreur technique, bilan non enregistré").
+- Transcription vide/incohérente → redemander par vocal plutôt que d'envoyer au LLM (voir spine, AD-8 — boucle de validation, pas un échec technique).
+- Message hors-sujet/ambigu → le LLM doit demander clarification, ne pas halluciner (idem, AD-8).
+- Échec technique (fichier inaccessible, service injoignable) → notification Telegram explicite ("Erreur technique, bilan non enregistré") — voir spine, AD-6.
 
 ### Sécurité
-- Credentials via le système de credentials chiffrés de n8n, jamais en clair, jamais commit en git.
-- Restriction d'accès au bot par `chat_id`.
+- Credentials jamais en clair, jamais commit en git — mécanisme précis (variables d'environnement) : voir spine, Deferred.
+- Restriction d'accès au bot par `chat_id` — voir spine, AD-7.
 
 ### Séquence de tests prévue
 1. Chaque brique isolément (Telegram, Whisper, lecture/écriture Obsidian).
