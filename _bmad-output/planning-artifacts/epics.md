@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [step-01]
+stepsCompleted: [step-01, step-02]
 inputDocuments:
   - '_bmad-output/planning-artifacts/prds/prd-assistant-trajet-quotidien-2026-09-02/prd.md'
   - '_bmad-output/planning-artifacts/architecture/architecture-assistant-trajet-quotidien-2026-09-03/ARCHITECTURE-SPINE.md'
@@ -67,8 +67,40 @@ Aucun — pas de document UX produit (interface Telegram uniquement, pas d'écra
 
 ### FR Coverage Map
 
-{{requirements_coverage_map}}
+FR1: Epic 1 - Restriction d'accès chat_id
+FR2: Epic 1 - Déclenchement manuel par bouton
+FR3: Epic 2 - Règle vocal/texte stricte
+FR4: Epic 1 - Déroulé du flux matin
+FR5: Epic 1 - Déroulé du flux midi
+FR6: Epic 1 - Déroulé du flux soir
+FR7: Epic 1 - Fiche journalière structurée
+FR8: Epic 1 - Lecture systématique de la fiche du jour
+FR9: Epic 1 - Mémoire intra-trajet
+FR10: Epic 3 - Déclenchement explicite de l'analyse de patterns
+FR11: Epic 3 - Recherche ciblée dans l'historique
+FR12: Epic 3 - Proposition de nouveau champ, jamais auto-appliquée
+FR13: Epic 2 - Transcription vocale inexploitable
+FR14: Epic 1 - Message hors-sujet ou ambigu
+FR15: Epic 1 - Échec technique (écriture atomique + notification)
+FR16: Epic 1 - Point d'appel LLM isolé
 
 ## Epic List
 
-{{epics_list}}
+### Epic 1: Bilans quotidiens en texte
+Sébastien peut faire ses trois bilans (matin/midi/soir) par écrit sur Telegram, avec continuité entre eux et un historique fiable dans Obsidian. Cœur du système, le plus gros risque technique (séquencement LangGraph, LiteLLM, topologie deux hôtes) validé avant d'ajouter la complexité vocale.
+**FRs covered:** FR1, FR2, FR4, FR5, FR6, FR7, FR8, FR9, FR14, FR15, FR16
+
+### Epic 2: Interaction vocale
+Sébastien peut faire les mêmes trois bilans entièrement en vocal (parle, on lui répond en vocal), sans jamais avoir à basculer vers le texte.
+**FRs covered:** FR3, FR13
+**Dépend d'Epic 1.**
+
+### Epic 3: Analyse de patterns à la demande
+Sébastien peut demander à l'assistant d'analyser ses bilans passés et de lui proposer, quand c'est pertinent, un nouveau champ structuré — jamais appliqué sans son accord.
+**FRs covered:** FR10, FR11, FR12
+**Dépend d'Epic 1.** Indépendant d'Epic 2.
+
+### Epic 4: Bascule production sécurisée
+Sébastien peut utiliser le système en confiance sur ses vraies données de travail secteur public — bascule du LLM de l'API de test vers Ollama local, validation que rien ne transite hors de son infra (hors risque Telegram déjà accepté).
+**FRs covered:** aucune nouvelle — valide NFR1, NFR2 (gate confidentialité), NFR5 (latence réelle)
+**Dépend d'Epic 1** (idéalement 2 et 3 aussi livrés avant bascule finale).
