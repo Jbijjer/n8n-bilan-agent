@@ -2,9 +2,11 @@
 
 Détail technique et décisions déjà validées par Sébastien, extraits du document source [`docs/brief-projet-assistant-trajet.md`](../../../../../docs/brief-projet-assistant-trajet.md). Ce contenu ne va pas dans `brief.md` (trop fin pour un brief produit) mais sert d'intrant direct au PRD et à l'architecture — **à ne pas rouvrir**, sauf indication contraire explicite de Sébastien.
 
-## Question ouverte — Choix d'orchestration (à trancher en phase architecture)
+## Choix d'orchestration — Résolu en phase architecture
 
-**Statut : ouvert.** Le brief d'origine posait n8n comme acquis pour l'orchestration ; cette hypothèse a été remise en question et n'est **pas** à traiter comme une décision figée. Les deux options restent sur la table jusqu'à la phase `bmad-architecture`.
+**Statut : tranché.** Décision : **Python custom + LangGraph**, ni n8n ni OpenClaw (options A et B ci-dessous, écartées). Raison décisive : c'est la seule option où le séquencement strict exigé par le PRD (une question à la fois, jamais sauter d'étape, une seule reformulation par point — FR-4/5/6) est garanti par construction (machine à états native LangGraph — nodes/edges/state) plutôt que porté par la qualité du prompt, comme c'est le cas pour n8n *et* OpenClaw. Décision et détails complets dans le spine d'architecture : `_bmad-output/planning-artifacts/architecture/architecture-assistant-trajet-quotidien-2026-09-03/`.
+
+Options écartées, conservées ici pour mémoire :
 
 **Option A — n8n** (hypothèse de départ, cf. section Orchestration ci-dessous)
 - Pour : nodes Telegram + AI Agent (mémoire de session intégrée) déjà bien adaptés au besoin ; self-hosted mature ; debug visuel de l'exécution (atout pour un utilisateur TDA) ; sous-workflows réutilisables qui collent au pattern "Call LLM isolé" (contrainte n°1).
@@ -14,14 +16,14 @@ Détail technique et décisions déjà validées par Sébastien, extraits du doc
 - Pour : vocal Telegram natif qui correspond quasi mot pour mot à la règle du brief (transcription auto via Whisper local en priorité, réponses en bulles vocales Telegram, mode `tts.auto: "inbound"` — ne parle que si le message entrant était vocal) ; accès fichiers via MCP filesystem server (lecture/écriture Obsidian sans plugin tiers) ; modèles hébergés ou locaux interchangeables (contrainte n°1) ; skills/plugins MCP (TypeScript/Python) pour les flux matin/midi/soir.
 - Contre : projet très récent (inconnu de l'agent avant recherche web, malgré ~388k étoiles GitHub — croissance très rapide, donc maturité et historique de sécurité à vérifier indépendamment avant d'y confier du contenu secteur public confidentiel, contrainte n°3) ; surface multi-canaux (WhatsApp/Telegram/Slack/Discord/Signal/iMessage) plus large qu'un workflow n8n isolé ; même limite que n8n sur la séquence stricte (portée par le prompt, pas une vraie FSM) ; boutons Telegram personnalisés (reply keyboard) à vérifier concrètement, pas confirmé en documentation.
 
-**Chemin de décision proposé :** spike cadré — implémenter le flux du soir de bout en bout dans chaque option (quelques heures), comparer sur : fiabilité de la séquence de questions, facilité de lecture/écriture de la fiche Obsidian, qualité réelle du vocal in/out, effort de maintenance perçu. À faire en phase `bmad-architecture`, pas avant — le PRD peut avancer sans que ce choix soit tranché, tant qu'aucune exigence fonctionnelle du PRD ne présuppose l'un ou l'autre.
+*(Le chemin de décision par spike envisagé initialement n'a pas été nécessaire — la contrainte de séquencement strict du PRD départageait déjà les options sans ambiguïté.)*
 
 Sources consultées : [openclaw/openclaw (GitHub)](https://github.com/openclaw/openclaw) · [OpenClaw docs — Plugin SDK](https://docs.openclaw.ai/plugins/sdk-overview) · [OpenClaw docs — Tools/Skills](https://docs.openclaw.ai/tools) · [Stack Junkie — OpenClaw Voice Mode](https://www.stack-junkie.com/blog/openclaw-voice-mode-telegram) · [LumaDock — Add voice to OpenClaw](https://lumadock.com/tutorials/openclaw-voice-tts-stt-talk-mode)
 
 ## Contraintes non négociables
 
 1. **Indépendance de modèle LLM** — appel LLM isolé/interchangeable, aucune logique de prompt ne dépend d'un modèle particulier.
-2. **Full self-hosted** — orchestration (n8n), stockage (Obsidian), et à terme LLM + vocal (STT/TTS), sans dépendance cloud pour les données sensibles.
+2. **Full self-hosted** — orchestration, stockage (Obsidian), et à terme LLM + vocal (STT/TTS), sans dépendance cloud pour les données sensibles.
 3. **Confidentialité secteur public** — contenu des bilans jamais hors infrastructure de Sébastien en production. Exception assumée : phase de tests initiale avec LLM API (Claude/GPT-4o).
 4. **Pas d'automatisation en arrière-plan** pour l'analyse de patterns — uniquement à la demande explicite, en langage naturel. Aucun job planifié modifiant la structure de données sans validation humaine.
 5. **Accès réseau** via Tailscale (point-à-point) + Cloudflare Tunnel (webhook exposé sans port ouvert en clair) — déjà tranché, pas d'alternative cloud à proposer.
@@ -46,14 +48,15 @@ Sources consultées : [openclaw/openclaw (GitHub)](https://github.com/openclaw/o
 - **Long terme / patterns** : recherche ciblée dans l'historique Obsidian (pas d'injection massive), déclenchée uniquement à la demande explicite. Si un pattern net est détecté dans "Autres", l'agent propose un champ structuré dédié — sans réécrire les entrées passées.
 
 ### Orchestration
-*(Hypothèse de départ décrite ci-dessous — outil non tranché, voir "Question ouverte — Choix d'orchestration" en tête de document.)*
-- Workflow "routeur" (réception Telegram, transcription si vocal, routage) + sous-workflows par flux (matin / midi / soir / analyse patterns).
-- Sous-workflows communs réutilisables : lecture fiche, appel LLM, TTS, écriture Obsidian.
-- Appel LLM isolé dans un sous-workflow dédié ("Call LLM"), point d'entrée unique — swap de modèle = changer un seul node.
+*(Description historique, pensée pour n8n — remplacée par la décision Python+LangGraph ci-dessus. Voir le spine d'architecture pour la conception actuelle : services/modules, checkpointer, frontières.)*
+- ~~Workflow "routeur" (réception Telegram, transcription si vocal, routage) + sous-workflows par flux (matin / midi / soir / analyse patterns).~~
+- ~~Sous-workflows communs réutilisables : lecture fiche, appel LLM, TTS, écriture Obsidian.~~
+- ~~Appel LLM isolé dans un sous-workflow dédié ("Call LLM"), point d'entrée unique — swap de modèle = changer un seul node.~~
+- Principe conservé sous une autre forme : appel LLM toujours isolé derrière un point d'entrée unique (interface `LLMClient` dans l'architecture Python) — swap de modèle = changer un adaptateur, pas la logique des flux.
 
 ### Vocal
-- STT : `faster-whisper` self-hosted (medium/large-v3, français), service local via HTTP.
-- TTS : Piper pour démarrer ; upgrade path vers Coqui XTTS v2 si besoin (~4-6GB VRAM). Interchangeables sans impact sur le reste du workflow.
+- STT : `faster-whisper` self-hosted (medium/large-v3, français). **Mis à jour en architecture :** utilisé **in-process** (librairie Python native), pas de service HTTP séparé — simplification permise par le paradigme Python, moins de pièces à faire tourner et surveiller.
+- TTS : Piper pour démarrer (bindings Python, in-process également) ; upgrade path vers Coqui XTTS v2 si besoin (~4-6GB VRAM). Interchangeables sans impact sur le reste du système.
 
 ### LLM
 - Phase de tests : API (Claude ou GPT-4o).
@@ -146,9 +149,9 @@ Reste factuel — ne pas extrapoler au-delà de ce qui est présent dans les don
 ## Ouvert à l'approfondissement (intrant pour PRD / architecture)
 
 - Schéma de données précis de la fiche Obsidian (noms de champs exacts, types, format du frontmatter YAML, convention de nommage des fichiers).
-- Liste des nodes n8n requis par sous-workflow, avec leurs configurations (credentials, paramètres).
+- ~~Liste des nodes n8n requis par sous-workflow~~ — obsolète (architecture Python+LangGraph retenue).
 - Mécanique exacte de la recherche ciblée dans l'historique Obsidian pour l'analyse de patterns (grep par plage de dates vs requêtes au plugin REST API — critères de sélection des entrées pertinentes).
-- Gestion précise de la mémoire de session du node AI Agent (durée de vie, nettoyage, format).
+- Gestion précise du checkpointer LangGraph (rétention, nettoyage des anciens threads, format) — voir spine d'architecture.
 - Détails d'implémentation du switch LLM (variables d'environnement, structure des credentials multiples).
 - Spécification du mécanisme de proposition de nouveau champ (comment le champ structuré est réellement ajouté au schéma une fois validé par Sébastien — modification manuelle ou semi-automatisée).
 - Stories/tickets de développement découpés à partir de la séquence de tests déjà établie.
