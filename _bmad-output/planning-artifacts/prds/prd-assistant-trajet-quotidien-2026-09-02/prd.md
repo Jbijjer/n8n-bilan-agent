@@ -255,7 +255,7 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 *Reprises et précisées à partir des critères de succès confirmés au brief produit.*
 
 **Primary**
-- **SM-1** : Usage soutenu — proportion de jours ouvrés avec au moins les flux matin + soir complétés. `[ASSUMPTION]` Cible proposée : ≥ 60 % sur une fenêtre glissante de 4 semaines, à confirmer par Sébastien. Valide FR-4, FR-6.
+- **SM-1** : Usage soutenu — Sébastien se sert régulièrement des flux matin et soir, sans que ce soit ressenti comme une corvée. Critère qualitatif, pas de quota chiffré (délibéré : un seuil rigide pénaliserait vacances, télétravail, semaines sans trajet — sans que ce soit un échec du produit). Valide FR-4, FR-6.
 - **SM-2** : Continuité parfaite — aucune question reposée par les flux midi/soir sur un point déjà répondu dans la fiche du jour. Cible : 0 occurrence observée. Valide FR-5, FR-6, FR-8.
 
 **Secondary**
@@ -277,5 +277,4 @@ Tous les flux passent par un point d'appel LLM unique et isolé du reste de la l
 
 ## 9. Assumptions Index
 
-- §4.4, FR-6 (Notes) — la règle "reformuler une seule fois" s'applique par point du bilan soir, pas une seule fois pour tout le flux.
-- §7, SM-1 — cible numérique proposée (≥ 60 % des jours ouvrés / 4 semaines glissantes), non fournie par Sébastien à l'origine.
+*Toutes les hypothèses inférées ont été confirmées avec Sébastien (voir `.memlog.md`) — aucune ouverte à ce stade.*
